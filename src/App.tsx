@@ -1,19 +1,26 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useState } from 'react'
 import css from './App.module.css'
 import AnimatedList from './AnimatedList/AnimatedList'
 
-const list = [
-  'Kisse',
-  'Koiro',
-  'Hevo',
-  'Kärmes',
-  'Kahru',
-]
+const App = (): ReactElement => {
 
-const App = (): ReactElement => (
-  <div className={css.root}>
-    <AnimatedList list={list} />
-  </div>
-)
+  const [list, setList] = useState([
+    'Kisse',
+    'Koiro',
+    'Hevo',
+    'Kärmes',
+    'Kahru',
+  ])
 
+  const onListChanged = (updated: string[]): void => {
+    setList(updated)
+  }
+
+  return (
+    <div className={css.root}>
+      <AnimatedList list={list} onListChanged={onListChanged} />
+      <pre>{JSON.stringify(list, null, 2)}</pre>
+    </div>
+  )
+}
 export default App

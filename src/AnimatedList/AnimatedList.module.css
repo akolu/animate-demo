@@ -1,6 +1,6 @@
 .root {
-    list-style-type: none;
     flex: 1;
+    list-style-type: none;
 }
 
 li {
@@ -9,6 +9,7 @@ li {
     border: 1px solid blue;
     margin: 5px;
     width: 100px;
+    height: 20px;
 }
 
 .selected {
