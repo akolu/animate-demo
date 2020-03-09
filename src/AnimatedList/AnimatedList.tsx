@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import css from './AnimatedList.module.css'
 
 interface Props {
@@ -14,8 +14,12 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
 
   const [selected, setSelected] = useState<string>('')
 
+  useEffect(() => {
+    setSelected('')
+  }, list)
+
   const animate = (item: Element, targetOffset: number): Promise<any> => {
-    return new Promise((res, rej) => {
+    return new Promise((res) => {
       const animation = item.animate([
         // keyframes
         { transform: 'translateY(0px)' },
@@ -47,10 +51,10 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
     // wait for animations to finish
     await Promise.all([
       animate(first, (indices[1] - indices[0]) * moveDistance),
-      animate(second, (indices[0] - indices[1]) * moveDistance), 
+      animate(second, (indices[0] - indices[1]) * moveDistance),
     ])
 
-    const updated = [ ...list ]
+    const updated = [...list]
     updated[indices[0]] = b
     updated[indices[1]] = a
     onListChanged(updated)
@@ -61,23 +65,34 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
       setSelected(item)
     } else {
       swapAnimated(selected, item)
-      setSelected('')
+    }
+  }
+
+  const getCSSClass = (item: string) => {
+    if (!selected) {
+      return ''
+    } else if (item === selected) {
+      return css.selected
+    } else {
+      return css.target
     }
   }
 
   return (
     <ul className={css.root}>
-      {list.map((item, index) => (
-        <li
-          data-item={item}
-          data-item-index={index}
-          key={`${item}-${index}`}
-          onClick={(e: any) => handleItemClick(e.target.innerHTML)}
-          className={`${item === selected ? css.selected : ''}`}
-        >
-          {item}
-        </li>
-      ))}
+      {list.map((item, index) => {
+        return (
+          <li
+            data-item={item}
+            data-item-index={index}
+            key={`${item}-${index}`}
+            onClick={(e: any) => handleItemClick(e.target.innerHTML)}
+            className={getCSSClass(item)}
+          >
+            {item}
+          </li>
+        )
+      })}
     </ul>
   )
 }
