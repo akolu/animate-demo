@@ -1,0 +1,16 @@
+.root {
+    list-style-type: none;
+    flex: 1;
+}
+
+li {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid blue;
+    margin: 5px;
+    width: 100px;
+}
+
+.selected {
+    background-color: gold;
+}
