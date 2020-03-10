@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import css from './AnimatedList.module.css'
+import usePrevious from '../hooks/usePrevious'
 
 interface Props {
   list: string[];
@@ -9,16 +10,15 @@ interface Props {
 const ITEM_MARGIN = 5
 const BORDER_HEIGHT = 1
 const ITEM_HEIGHT = 20
+const ITEM_DISTANCE = (ITEM_HEIGHT + BORDER_HEIGHT) * 2 + ITEM_MARGIN
 
 const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
 
+  const prev = usePrevious(list)
+  const [current, setCurrent] = useState<string[]>(list)
   const [selected, setSelected] = useState<string>('')
 
-  useEffect(() => {
-    setSelected('')
-  }, list)
-
-  const animate = (item: Element, targetOffset: number): Promise<any> => {
+  const animate = (item: Element, targetOffset: number): Promise<Animation> => {
     return new Promise((res) => {
       const animation = item.animate([
         // keyframes
@@ -35,36 +35,43 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
     })
   }
 
-  const swapAnimated = async (a: string, b: string) => {
-    if (a === b) {
+  useEffect(() => {
+    // no previous state, nothing to animate
+    if (!prev) {
       return
     }
-
-    const first = document.querySelector(`[data-item=${a}`)
-    const second = document.querySelector(`[data-item=${b}`)
-    if (!first || !second) {
-      return
-    }
-    const indices = [first, second].map(i => parseInt(i.getAttribute('data-item-index') || '', 10) || 0)
-    const moveDistance = (ITEM_HEIGHT + BORDER_HEIGHT) * 2 + ITEM_MARGIN
-
+    const animations = prev
+      .reduce((acc, cur) => {
+        const i = prev.indexOf(cur)
+        const newIndex = list.indexOf(cur)
+        // same position, do not animate
+        if (newIndex === i) {
+          return acc
+        }
+        const element = document.querySelector(`[data-item=${cur}`)
+        // element not found in DOM, do not animate
+        if (!element) {
+          return acc
+        }
+        return [...acc, animate(element, (newIndex - i) * ITEM_DISTANCE)]
+      }, [] as Promise<Animation>[])
     // wait for animations to finish
-    await Promise.all([
-      animate(first, (indices[1] - indices[0]) * moveDistance),
-      animate(second, (indices[0] - indices[1]) * moveDistance),
-    ])
-
-    const updated = [...list]
-    updated[indices[0]] = b
-    updated[indices[1]] = a
-    onListChanged(updated)
-  }
+    Promise.all(animations).then(() => {
+      setCurrent(list)
+      setSelected('')
+    })
+  }, [list, prev])
 
   const handleItemClick = (item: string) => {
     if (selected === '') {
       setSelected(item)
     } else {
-      swapAnimated(selected, item)
+      const origIndex = current.indexOf(selected)
+      const destIndex = current.indexOf(item)
+      const updated = [...current]
+      updated[origIndex] = item
+      updated[destIndex] = selected
+      onListChanged(updated)
     }
   }
 
@@ -80,7 +87,7 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
 
   return (
     <ul className={css.root}>
-      {list.map((item, index) => {
+      {current.map((item, index) => {
         return (
           <li
             data-item={item}

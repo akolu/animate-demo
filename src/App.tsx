@@ -16,8 +16,14 @@ const App = (): ReactElement => {
     setList(updated)
   }
 
+  const shuffleList = () => {
+    const shuffled = list.slice().sort(() => Math.random() - 0.5)
+    setList(shuffled)
+  }
+
   return (
     <div className={css.root}>
+      <input type="button" onClick={shuffleList} value="Shuffle" />
       <AnimatedList list={list} onListChanged={onListChanged} />
       <pre>{JSON.stringify(list, null, 2)}</pre>
     </div>
