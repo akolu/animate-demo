@@ -18,7 +18,7 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
   const [current, setCurrent] = useState<string[]>(list)
   const [selected, setSelected] = useState<string>('')
 
-  const animate = (item: Element, targetOffset: number): Promise<Animation> => {
+  const animateMove = (item: Element, targetOffset: number): Promise<Animation> => {
     return new Promise((res) => {
       const animation = item.animate([
         // keyframes
@@ -31,6 +31,22 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
         fill: 'forwards',
         easing: 'cubic-bezier(0.39, 0, 0.45, 1.4)'
       })
+      animation.onfinish = () => res()
+    })
+  }
+
+  const animateDelete = (item: Element): Promise<Animation> => {
+    return new Promise((res) => {
+      const animation = item.animate([
+        {
+          opacity: 1,
+          transform: 'translateX(0px)'
+        },
+        {
+          opacity: 0,
+          transform: 'translateX(500px)'
+        }
+      ], 750)
       animation.onfinish = () => res()
     })
   }
@@ -53,7 +69,11 @@ const AnimatedList: React.FC<Props> = ({ list, onListChanged }: Props) => {
         if (!element) {
           return acc
         }
-        return [...acc, animate(element, (newIndex - i) * ITEM_DISTANCE)]
+        if (newIndex === -1) {
+          return [...acc, animateDelete(element)]
+        } else {
+          return [...acc, animateMove(element, (newIndex - i) * ITEM_DISTANCE)]
+        }
       }, [] as Promise<Animation>[])
     // wait for animations to finish
     Promise.all(animations).then(() => {
